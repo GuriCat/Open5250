@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Open 5250 Guide</title>
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<div class="manual-body">
+
+<h1 class="chapter">Open 5250 Guide</h1>
+
+<p>Open 5250 is a 5250 screen server that runs on IBM&nbsp;i. The PC needs only a browser: you start a session from the admin screen and open the 5250 screen in a browser tab. From RPG and CL, you can drive sessions with the ILE API (library I5250).</p>
+
+<h2 class="section">1&nbsp;Installation, starting and ending</h2>
+
+<ul>
+  <li>The installation directory is <code>/i5250</code>. For the installation steps, see <code>README_ja.md</code> in the distribution.</li>
+  <li>The ILE API and CL commands are restored into library I5250 from the save file <code>I5250.SAVF</code> in the distribution (IBM&nbsp;i V7R4M0 or later; for the steps, see section 2.2 of the Open 5250 manual).</li>
+</ul>
+
+<p><strong>Starting and ending the admin screen (for administrators)</strong></p>
+<table class="compact">
+  <tr><th style="width:34mm">Command</th><th>Behavior</th></tr>
+  <tr><td><code>I5250/STRI5250</code></td><td>Starts the admin screen (batch job I5250ADM; the default job queue is QSYS/QSYSNOMAX = subsystem QSYSWRK). With <code>RESTART(*YES)</code>, it ends all 5250 sessions and the admin screen, then starts only the admin screen.</td></tr>
+  <tr><td><code>I5250/ENDI5250</code></td><td>Ends all 5250 sessions and the admin screen. <code>OPTION(*CNTRLD)</code> (the default) waits up to <code>DELAY</code> seconds (default <code>*NOLIMIT</code> = no limit) for each session to return to the sign-on screen or be disconnected; when that time is exceeded, it signs off with SysReq → 90 and disconnects, the same as <code>*IMMED</code>. The values and defaults are the same as for ENDSBS.</td></tr>
+</table>
+<ul>
+  <li>Only users with user class *SECOFR can run these commands. The parameters are described in the F1 help.</li>
+  <li>The interactive jobs of the 5250 sessions run in QINTER, separately from the admin screen. Ending only the admin screen job I5250ADM with ENDJOB does not stop the 5250 sessions.</li>
+  <li>Progress is logged to <code>log/i5250cmd.log</code> in the installation directory. From a shell, you can also start and stop the admin screen with <code>start-admin.sh</code> / <code>stop-admin.sh</code>.</li>
+</ul>
+
+<h2 class="section">2&nbsp;Using it from a browser</h2>
+
+<p><strong>Starting a session</strong></p>
+<table class="compact">
+  <tr><th style="width:34mm">Method</th><th>Operation</th></tr>
+  <tr><td>Admin screen</td><td>Open <code>http://&lt;IBM i&gt;:5250/</code> in a browser and sign in with your IBM&nbsp;i User ID and Password.</td></tr>
+  <tr><td>Start</td><td>Next to the "Start a new session" heading, choose "Dedicated" (the default) or "Shared", then press "Start". Use the radio buttons below to choose Quick connect (the default) or Preset (choosing a code page, screen, or preset again selects the corresponding radio button). While the session is starting, the elapsed seconds are shown (it takes a few seconds). "Open" in the list shows the 5250 screen in another browser tab.</td></tr>
+  <tr><td>Quick connect</td><td>Starts a session without creating a preset. Choose a "Host code page" and a "Screen". The default host code page is 5026 Japanese Katakana (equivalent to 930 in IBM&nbsp;i Access Client Solutions) when the primary language of the IBM&nbsp;i is Japanese (2962 or 2930), and 037 otherwise. The default screen is 24x80. The connection is always to that IBM&nbsp;i partition.</td></tr>
+  <tr><td>Start with a preset</td><td>Choose a connection configuration under "Preset" (with "IBM i host name or IP address" and "Destination port" in the connection configuration, you can connect to another IBM&nbsp;i as well as this partition). The Preset list and the AUTOTYP script list are shown collapsed. Press a heading to expand it.</td></tr>
+  <tr><td>Open the screen in</td><td>In the settings window (the gear at the right end of the "Active sessions" heading), chooses where "Open" in the list opens the 5250 screen: "New tab" (the default) or "New window" (a small window with no address bar or tabs). The chosen value is saved in that browser.</td></tr>
+  <tr><td>Copy link</td><td>The copy icon (Copy link) next to "Open" in the list copies the address of the 5250 screen to the clipboard. If you give it to another person, they can open the same session in their browser (for a dedicated session, only the first tab that opened it can use it).</td></tr>
+</table>
+<p>"Help" at the top right of the admin screen and the help button (a circled i) on the 5250 screen toolbar open this guide.</p>
+
+<p><strong>Operation in the browser</strong></p>
+<ul>
+  <li>The address of a 5250 screen is <code>http://&lt;IBM i&gt;:&lt;port&gt;/</code>. The port is shown in the list on the admin screen.</li>
+  <li>Closing the tab or the browser does not end the session (it stays signed on). Open it again with "Open" in the list to continue where you left off. Reloading works the same way.</li>
+  <li>To end a session, sign off on the 5250 screen, then in the list on the admin screen choose "Wait" and press "Disconnect". "Wait" waits until the session returns to the sign-on screen, and switches to "Immediate" when the specified number of seconds is exceeded. "Immediate" signs off with SysReq → 90 and then disconnects. If the sign-off does not finish within 15 seconds (for example, in the middle of a long process such as save or restore), the connection is simply dropped and the session ends. In this case the IBM&nbsp;i job may keep running until a break in its processing (the same as when you close a 5250 screen window in IBM&nbsp;i Access Client Solutions). If necessary, check with WRKACTJOB or similar.</li>
+  <li>The person icon on the 5250 screen toolbar shows whether the session is dedicated (one person) or shared (two people). Pressing it does not switch the mode. Whether a session is shared or dedicated is decided when the session is started.</li>
+  <li>The window mode switch and microphone (voice input) buttons that IBM 5250 MCP has are not shown in Open 5250.</li>
+  <li><strong>Display settings</strong> — The toolbar toggles (input field highlighting, column separators, shift character display, blinking, crosshair ruler, cursor, hide toolbar, display language) are saved in the browser you use (a cookie). Whatever the port number, the same browser starts with the same settings; another PC starts with the defaults. The font is saved to the preset for a session started with a preset (quick connect starts with the defaults every time).</li>
+  <li><strong>Where presets are saved</strong> — One file per preset, at <code>presets/&lt;preset name&gt;.i5250</code> in the installation directory (for example <code>/i5250/presets/LOCAL.i5250</code>). Each line has the form "key=value". You can create, edit, and delete presets in the "Preset list" on the admin screen.</li>
+  <li>For operation of the 5250 screen itself (keys, toolbar, AUTOTYP, and so on), see the included IBM 5250 MCP User Guide (<code>IBM5250-MCP-User-Guide-EN.pdf</code>). Behavior and restrictions that differ from IBM 5250 MCP are listed in section 4.7 of the Open 5250 manual.</li>
+  <li><strong>User-defined characters</strong> — IBM&nbsp;i sends only the values of user-defined characters, not their glyphs. When you get the glyphs with "IBM i user-defined character management" in the Settings window (the gear) of the admin screen, user-defined characters on the 5250 screen are drawn with those glyphs.
+    <ul>
+      <li>Pressing "Get" opens a window that asks for a User ID and Password. It connects to the FTP server of this partition, exports the user-defined characters of QIGC3232 (32×32) and QIGC2424 (24×24) with CPYIGCTBL, and retrieves them (the export goes to QTEMP of the FTP job, so no objects are left on IBM&nbsp;i; the password is not saved). The FTP server must be running (STRTCPSVR *FTP).</li>
+      <li>Required authority: *USE on the font tables (QIGC3232, QIGC2424) (IBM&nbsp;i Security, "Double-byte character set commands"). Operation has been verified with a *SECOFR class user.</li>
+      <li>32×32 glyphs take priority; characters without one are drawn with the 24×24 glyph. User-defined characters with no glyph (not retrieved or not defined) are drawn as a dotted box with a diagonal-line glyph.</li>
+      <li>Pressing "Show" shows a list of the user-defined characters in another tab (the EBCDIC, PC (Shift-JIS), and Unicode codes, and the 24×24 and 32×32 glyphs).</li>
+      <li>After adding or changing user-defined characters, press "Get" again. The copied user-defined characters become characters in the Unicode Private Use Area (in order, starting with X'6941' = U+E000).</li>
+    </ul></li>
+  <li><strong>URL hotspots</strong> — URLs shown on the screen (http / https / www / mailto / ftp / file / gopher) are underlined, and the mouse pointer becomes a finger. Clicking one opens it in a new window (the same as the IBM&nbsp;i Access Client Solutions default "Underline URLs"). URLs inside input fields are not included.
+    <ul>
+      <li>Because browsers cannot open <code>file://</code> URLs (for example <code>FILE://GURI/IMG/658.JPG</code>) directly, Open 5250 reads the file from the IFS of that IBM&nbsp;i and returns it. Only files whose URLs are shown on that session's current screen are returned. Files are read with the authority of the user running Open 5250 (the admin screen job) (the NetServer share authority check is not applied). Beforehand, confirm that users can access the folder, for example by opening it in Explorer.</li>
+      <li><strong>PC commands (STRPCCMD)</strong> — Commands with which an IBM&nbsp;i program uses STRPCCMD to have the PC open a file (<code>START</code> + a shared-folder file such as <code>START \\GURI\TMP\…\x.PDF</code>, a <code>file://</code>, or an <code>http://</code>) are opened in a new window of the 5250 screen's browser. Only things a browser can display, such as PDF, text, and images, are supported. If the browser blocks the new window, nothing opens. Allow pop-ups for this site in the browser settings.
+        <ul>
+          <li>No command is run, either on IBM&nbsp;i or on the PC. Commands that run programs, such as starting Excel, cannot be used.</li>
+          <li>Only the "target" of a <code>START ["title"] [/options] target</code> that IBM&nbsp;i sent to that session with STRPCCMD can be opened. Everything remaining after removing the title and options is treated as one target: if it begins with <code>http://</code>, <code>https://</code>, or <code>www.</code>, it is treated as a URL; if it begins with <code>\\host\</code>, <code>//host/</code>, or <code>file://</code>, it is treated as a shared-folder file. Anything else is not opened (for examples and details, see section 4.5.1 of the Open 5250 manual). The "Restrictions" below apply equally to the file location (the share name must be in the NetServer share definitions, and the file must be on that partition).</li>
+          <li>Text that cannot be read as UTF-8 is displayed as Shift_JIS.</li>
+          <li>File names may contain Japanese (DBCS). If a file name in lowercase English letters arrives as half-width Katakana (and also appears as half-width Katakana on the 5250 screen), switch to lowercase English with the character switch on the toolbar (A / ｱ, Ctrl+F3) before opening it. The PC command string is read according to the character switch setting at that time.</li>
+        </ul></li>
+      <li><strong>Restrictions</strong>: The share name in <code>file://host/share-name/path</code> is converted to an IFS path using the NetServer file share definitions (QSYS2.SERVER_SHARE_INFO) (for example, if share <code>LMS</code> points to <code>/tmp/PCDOC</code>, <code>FILE://GURI/LMS/x.PPT</code> becomes <code>/tmp/PCDOC/x.PPT</code>). Share names not in the definitions cannot be opened. Also, files can be opened only when the host name is that IBM&nbsp;i partition (system name, host name, or IP address); files on other servers cannot be opened (Open 5250 does not read other servers as a CIFS client). A host name that does not match by name is resolved to an IP address with IBM&nbsp;i name resolution (host table, DNS), and the file is opened if it is an IP address of this partition (because name resolution can take time, it starts as soon as a file:// appears on the screen, and the result is remembered for 10 minutes).</li>
+    </ul></li>
+</ul>
+
+<p><strong>Multiple sessions</strong></p>
+<ul>
+  <li>Each session uses its own port (in order starting at 5251) and runs as a separate interactive job on IBM&nbsp;i. Sessions in different processes do not affect each other (for sessions in the same process, see the next item).</li>
+  <li>The number of sessions that can run at the same time is set by "Maximum sessions" on the admin screen (default 10 = ports 5251 to 5260).</li>
+  <li>The number of sessions handled by one server process (node) is set by "Sessions per process" on the admin screen (1 / 10 / unlimited, default 10). A new session goes into the process handling the fewest sessions, and a new process is started only when no process can take it. Sharing a process makes starting faster and uses less memory, but if that process ends abnormally or is forcibly ended, all sessions in the same process end. Ending one session or a disconnect from IBM&nbsp;i ends only that session.</li>
+  <li>"Device name" in the list is the display device that IBM&nbsp;i assigned to the session (for example QPADEV0003). It is also the name of the interactive job.</li>
+  <li>When "Inactivity timeout" (5 to 300 minutes; blank = none) is set on the admin screen, a signed-on session that has no exchange with IBM&nbsp;i (sending an action key and so on, or a screen update) for that many minutes is ended with the same procedure as "Immediate". Sessions still at the sign-on screen are not affected. While a command or program is running (while the keyboard is locked, including long processes such as save that run without showing a screen), the session is not considered inactive, and counting restarts from the point when the run ends and input becomes possible. Whether the time has expired is checked every 15 seconds, so the session ends up to about 15 seconds after the specified time.
+    <ul>
+      <li>An open 5250 screen first shows the sign-on screen, then right away (1 to 2 seconds later) the screen goes blank and <code>COMM659</code> (communication disconnected) appears on the bottom line. The session has ended, so that screen can no longer be used. To continue, start a new session from the admin screen.</li>
+      <li>It disappears from the list on the admin screen in about 5 seconds.</li>
+      <li>The range of values is the same as the IBM&nbsp;i system value QINACTITV, but the action is different. QINACTITV ends the job (when QINACTMSGQ is *ENDJOB) or disconnects it (when *DSCJOB). Open 5250 signs off, drops the connection, and ends the session itself. When both are set, whichever expires first takes effect.</li>
+    </ul></li>
+</ul>
+
+<p><strong>Shared and dedicated</strong></p>
+<table class="compact">
+  <tr><th style="width:34mm">Mode</th><th>Behavior</th></tr>
+  <tr><td><strong>Shared</strong></td><td>A special use in which several people display and operate the same session at the same time (normal 5250 sessions use dedicated). When the same session is opened in several browsers or tabs, everyone can both see and type. One person's input also appears on the others' screens (the delay before it appears is the round-trip time of communication between the PC and IBM&nbsp;i, plus the 0.05 seconds the server takes to batch input, plus screen processing time. In an example measured over a VPN connection with a round trip of about 0.025 seconds, it was about 0.15 seconds. It varies with line conditions. If you type fast, several characters appear together). When someone presses an action key or similar, everyone's screen moves to the next screen. When people type into the same field at the same time, only the value of the person processed last remains (the characters of two people are never mixed).</td></tr>
+  <tr><td><strong>Dedicated</strong></td><td>Only the first tab that opened the 5250 screen can display it and type. When it is opened in another tab (another tab of the same browser, a tab of another browser on the same PC, a tab of a browser on another client (another PC), or a tab made with "Duplicate tab"; the owner is the tab, not the browser or the person), the message "This session is dedicated and is in use by another user." is shown and that tab is closed. After the "Dedicated release time" (admin screen settings, default 5 minutes; 0 = about 5 seconds) once the tab in use is closed, the session can be opened in another tab. Reloading the tab in use lets that tab keep using the session. If the PC in use goes down or the line stays disconnected, the "Dedicated release time" is counted from about 1 minute after it stops responding.</td></tr>
+</table>
+
+<div class="box caution">
+  <div class="box-title">Caution</div>
+  <ul>
+    <li>The 5250 screen ports have no authentication. Anyone who knows the port number can display and operate a shared session.</li>
+    <li>Even for a dedicated session, if you close the tab while still signed on, after the "Dedicated release time" (default 5 minutes) the next person who opens it can use that signed-on screen. Sign off when you leave your desk or finish using it.</li>
+    <li>If the tab using a dedicated session does not respond to the server for about 1 minute (the PC stops, the line is cut, the browser puts a background tab to sleep, and so on), that tab is no longer considered in use, and the session can be opened in another tab. When you return to that tab, you can keep using it if no other tab is using the session.</li>
+    <li>In dedicated mode, the only other tabs that can be closed automatically are tabs opened with "Open" on the admin screen and tabs made from them with "Duplicate tab". Tabs opened by entering the URL in the address bar (and their duplicates), for example, cannot be closed because of browser restrictions and remain as a blank screen (input is not possible). Close them by hand.</li>
+    <li>A session started from the admin screen does not reconnect automatically when the connection to IBM&nbsp;i is lost. When the host closes the connection, the session ends.</li>
+  </ul>
+</div>
+
+<h2 class="section">3&nbsp;Using it from RPG and CL (ILE API)</h2>
+
+<p>With the commands (I5250xxx) from CL programs, and with the procedures of service program I5250/I5250API from ILE RPG, you can start a 5250 session, send keys and characters, and read the screen. Sessions are specified by port number.</p>
+
+<div class="box caution">
+  <div class="box-title">Read this first</div>
+  <ul>
+    <li>The admin screen must be running (it accepts the requests to start and end sessions). Only requests from the same partition (127.0.0.1) are accepted, and there is no authentication.</li>
+    <li><strong>Right after a key is sent, the screen may still be the previous one.</strong> To read the next screen, save the screen before sending the key, then get the screen again every second until it changes (WAIT2 in the sample below). If you use only "input ready" as the condition, you will read the previous screen.</li>
+    <li>Right after sign-on, a screen such as "Display Program Messages" may come in between. Check with <code>I5250FLD</code> whether the cursor position is an input field, and if it is not, proceed with ENTER.</li>
+    <li>Rows (ROW) and columns (COL) are counted from 1. 0 means "the current cursor position". Specify the position of the data (the column after the attribute byte).</li>
+    <li>Characters are passed in the job CCSID (the API does the conversion). When the job CCSID is 65535, the default CCSID (DFTCCSID) is used.</li>
+    <li>Several programs can use the same session, but the API has no locking. Dedicated (*DEDICATED) only refuses other browser tabs; it does not refuse operations from the API. When programs may use a session at the same time, the callers must keep the order (for example, use it only after holding a data area in your own library with <code>ALCOBJ</code>).</li>
+    <li>Character literals passed from the command line with <code>CALL ... PARM('...')</code> are passed reliably only up to 32 bytes (IBM&nbsp;i specification). Pass longer values from variables in a CL program.</li>
+  </ul>
+</div>
+
+<h3>3.1&nbsp;CL commands</h3>
+<p>On failure, the commands send escape message CPF9897 (receive it with <code>MONMSG MSGID(CPF9897)</code> and get the reason with <code>RCVMSG MSGTYPE(*EXCP) MSGDTA(&amp;MSG)</code>). To check the description of each parameter, press F1 at the prompt (F4) to see the help.</p>
+<table class="compact">
+  <tr><th style="width:62mm">Syntax</th><th>Description</th></tr>
+  <tr><td><code>I5250STR PRESET(preset-name) MODE(*DEDICATED|*SHARED) PORT(&amp;PORT)</code></td><td>Starts a session and returns the port number in &amp;PORT (<code>*DEC 5 0</code>). The default for MODE is *DEDICATED (dedicated). Can be used <strong>only within a CL program</strong> (because it returns a value).</td></tr>
+  <tr><td><code>I5250END PORT(n) OPTION(*CNTRLD|*IMMED) DELAY(*DFT|seconds)</code></td><td>Ends a session. *CNTRLD (the default) waits DELAY seconds (0 to 99999; *DFT = the admin screen default of 300 seconds) for the session to return to the sign-on screen, and signs off with SysReq → 90 if it does not. *IMMED signs off with SysReq → 90 immediately. If the session is at the sign-on screen, either option ends it immediately.</td></tr>
+  <tr><td><code>I5250KEY PORT(n) KEY(key) ROW(row) COL(column)</code></td><td>Sends a key. When ROW and COL (default 0 = the current position) are specified, the cursor is moved there before the key is sent. The key names are listed in the table below.</td></tr>
+  <tr><td><code>I5250TXT PORT(n) TEXT(characters) ROW(row) COL(column) KEY(ENTER|*NONE|key)</code></td><td>Types characters and then sends a key (the default for KEY is ENTER; with *NONE, it only types). TEXT is up to 1024 bytes and can be an expression. Passing a CL variable as is also types its trailing blanks, so write it like <code>TEXT(%TRIMR(&amp;USER))</code>.</td></tr>
+  <tr><td><code>I5250PST PORT(n) TEXT(characters) ROW(row) COL(column)</code></td><td>Pastes several lines as a rectangle with the specified position as the top left corner (line break = X'25', up to 3000 bytes; no key is sent). TEXT can be an expression.</td></tr>
+  <tr><td><code>I5250SCR PORT(n) SCREEN(&amp;SCR) ROWS(&amp;R) COLS(&amp;C) CSRROW(&amp;CR) CSRCOL(&amp;CC) READY(&amp;RDY)</code></td><td>Gets the screen. SCREEN (<code>*CHAR 3564</code>) is the rows joined in order; row n is the COLS columns starting at <code>(n-1)*COLS+1</code>. ROWS, COLS, CSRROW, and CSRCOL are <code>*DEC 3 0</code>, and READY (<code>*CHAR 1</code>) is '1' if input is ready. Can be used <strong>only within a CL program</strong>.</td></tr>
+  <tr><td><code>I5250FLD PORT(n) ROW(row) COL(column) LEN(length) TEXT(&amp;T)</code></td><td>Gets the characters at the specified position (TEXT is <code>*CHAR 3564</code>). LEN(0) (the default) means from that position to the end of the field; if the position is not an input field, CPF9897 is sent. Can be used <strong>only within a CL program</strong>.</td></tr>
+  <tr><td><code>I5250ATP PORT(n) SRCFILE(library/file) SRCMBR(member)</code><br>or <code>I5250ATP PORT(n) STMF('path')</code></td><td>Reads an AUTOTYP script from a source member (the default for SRCFILE is *LIBL/QAUTOTYP) or a stream file and runs it. While reading, a temporary file is created at <code>/tmp/I5250ATP-&lt;job number&gt;.TXT</code> and deleted when finished.</td></tr>
+</table>
+
+<p><strong>Key names</strong> (specified for KEY and Key, in uppercase)</p>
+<table class="compact">
+  <tr><th style="width:34mm">Type</th><th>Names</th></tr>
+  <tr><td>Action keys</td><td><code>ENTER</code> <code>F1</code> to <code>F24</code> <code>PAGEUP</code> <code>PAGEDOWN</code> (<code>ROLLUP</code> <code>ROLLDN</code>) <code>HELP</code> <code>CLEAR</code> <code>PRINT</code> <code>PA1</code> to <code>PA3</code> <code>SYSRQ</code> <code>ATTN</code></td></tr>
+  <tr><td>Cursor movement</td><td><code>TAB</code> <code>BTAB</code> <code>UP</code> <code>DOWN</code> <code>LEFT</code> <code>RIGHT</code> <code>HOME</code> <code>NEWLINE</code></td></tr>
+  <tr><td>Editing</td><td><code>RESET</code> <code>ERASE_EOF</code> <code>ERASE_INPUT</code> <code>FIELD_EXIT</code> <code>FIELD_EXIT_PLUS</code> <code>FIELD_EXIT_MINUS</code> <code>DEL</code> <code>INSERT</code> <code>DUP</code> <code>FIELD_MARK</code> <code>SPACE</code></td></tr>
+</table>
+
+<h3>3.2&nbsp;RPG procedures (service program I5250/I5250API)</h3>
+<p>Declare them with <code>/COPY I5250/QRPGLESRC,I5250API_H</code> and bind with <code>H BNDDIR('I5250/I5250')</code>. Every procedure returns a return code (<code>10I 0</code>, 0 = normal); when it is not 0, get the reason with <code>I5250_Error()</code>.</p>
+<table class="compact">
+  <tr><th style="width:62mm">Procedure</th><th>Description</th></tr>
+  <tr><td><code>I5250_Start(Preset : Mode : Port)</code></td><td>Starts a session. Preset = preset name (<code>32A VARYING</code>), Mode = <code>'*SHARED'</code> / <code>'*DEDICATED'</code>; the started port is returned in Port (<code>10I 0</code>).</td></tr>
+  <tr><td><code>I5250_End(Port : Option : Delay)</code></td><td>Ends a session. Option = <code>'*CNTRLD'</code> / <code>'*IMMED'</code>, Delay = wait time (seconds; -1 = the admin screen default).</td></tr>
+  <tr><td><code>I5250_SendKey(Port : Key : Row : Col)</code></td><td>Sends a key. Row and Col = 0 means the current position.</td></tr>
+  <tr><td><code>I5250_SendText(Port : Text : Row : Col : Key)</code></td><td>Types characters (<code>32000A VARYING</code>) and then sends a key. With Key = <code>'*NONE'</code>, it only types.</td></tr>
+  <tr><td><code>I5250_PasteText(Port : Text : Row : Col)</code></td><td>Pastes several lines as a rectangle (line break = X'25'; no key is sent).</td></tr>
+  <tr><td><code>I5250_GetScreen(Port : Screen : Rows : Cols : CsrRow : CsrCol : Ready)</code></td><td>Gets the screen. Screen is <code>3564A</code>; row n is the Cols columns starting at <code>(n-1)*Cols+1</code>. Ready = 1 means input is ready.</td></tr>
+  <tr><td><code>I5250_GetFieldText(Port : Row : Col : Length : Text)</code></td><td>Returns Length columns of characters from the specified position in Text (<code>3564A VARYING</code>). Length = 0 means to the end of the field.</td></tr>
+  <tr><td><code>I5250_RunAutotyp(Port : Script)</code></td><td>Runs the body of an AUTOTYP script (<code>65000A VARYING</code>, line break = X'25').</td></tr>
+  <tr><td><code>I5250_RunAutotypStmf(Port : Path : Trim)</code></td><td>Runs a script in a stream file (CCSID 1208). With Trim = <code>'1'</code>, trailing blanks on each line are removed.</td></tr>
+  <tr><td><code>I5250_Error()</code></td><td>Returns the error message of the previous call (<code>512A VARYING</code>).</td></tr>
+</table>
+<p>Write the source in fixed form (H, D, and P specifications in fixed form, calculations in free form). Because <code>EXTPROC(*DCLCASE)</code> cannot be used in fixed-form D specifications, the declarations (I5250API_H) specify procedure names as character literals, like <code>EXTPROC('I5250_Start')</code>.</p>
+
+<h3>3.3&nbsp;Samples</h3>
+<p>The following two samples are included in library I5250 as programs and source (QCLSRC, QRPGLESRC).</p>
+<table class="compact">
+  <tr><th style="width:34mm">Program</th><th>Description</th></tr>
+  <tr><td><code>SMPSGN</code> (ILE CL)</td><td>Uses the commands to sign on, read the first screen, SIGNOFF, and end the session. <code>CALL I5250/SMPSGN PARM('LOCAL' 'user' 'password')</code></td></tr>
+  <tr><td><code>SMPSCR</code> (ILE RPG)</td><td>Uses the procedures to start a session, write the screen to the job log, get the characters of the input field at the cursor position, and then end the session. <code>CALL I5250/SMPSCR PARM('LOCAL')</code></td></tr>
+</table>
+
+<p><strong>CL example</strong> (the essentials of SMPSGN: start a session, wait for the sign-on screen, sign on, and read the next screen)</p>
+<pre><code>             PGM        PARM(&amp;PRESET &amp;USER &amp;PWD)
+             DCL        VAR(&amp;PRESET) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&amp;USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&amp;PWD) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&amp;PORT) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&amp;SCREEN) TYPE(*CHAR) LEN(3564)
+             DCL        VAR(&amp;BEFORE) TYPE(*CHAR) LEN(3564)
+             DCL        VAR(&amp;ROWS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;COLS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;CROW) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;CCOL) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;PROW) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;READY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&amp;TRIES) TYPE(*INT) LEN(4)
+             DCL        VAR(&amp;LINE) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&amp;MSG) TYPE(*CHAR) LEN(512)
+             MONMSG     MSGID(CPF9897) EXEC(GOTO CMDLBL(ERROR))
+
+/* Start the session (the port is returned in &amp;PORT) */
+             I5250/I5250STR PRESET(&amp;PRESET) MODE(*DEDICATED) +
+                          PORT(&amp;PORT)
+/* Wait for the sign-on screen (every 1 second, up to 30 seconds) */
+             CHGVAR     VAR(&amp;TRIES) VALUE(0)
+WAIT1:       I5250/I5250SCR PORT(&amp;PORT) SCREEN(&amp;SCREEN) +
+                          ROWS(&amp;ROWS) COLS(&amp;COLS) CSRROW(&amp;CROW) +
+                          CSRCOL(&amp;CCOL) READY(&amp;READY)
+             IF         COND((&amp;READY *NE '1' *OR +
+                          &amp;SCREEN *EQ ' ') *AND &amp;TRIES *LT 30) +
+                          THEN(DO)
+             CHGVAR     VAR(&amp;TRIES) VALUE(&amp;TRIES + 1)
+             DLYJOB     DLY(1)
+             GOTO       CMDLBL(WAIT1)
+             ENDDO
+/* Type the user (at the cursor) and password (one row down), */
+/* save the screen just before ENTER in &amp;BEFORE, then ENTER  */
+             I5250/I5250TXT PORT(&amp;PORT) TEXT(%TRIMR(&amp;USER)) +
+                          ROW(&amp;CROW) COL(&amp;CCOL) KEY(*NONE)
+             CHGVAR     VAR(&amp;PROW) VALUE(&amp;CROW + 1)
+             I5250/I5250TXT PORT(&amp;PORT) TEXT(%TRIMR(&amp;PWD)) +
+                          ROW(&amp;PROW) COL(&amp;CCOL) KEY(*NONE)
+             I5250/I5250SCR PORT(&amp;PORT) SCREEN(&amp;BEFORE) +
+                          ROWS(&amp;ROWS) COLS(&amp;COLS) CSRROW(&amp;CROW) +
+                          CSRCOL(&amp;CCOL) READY(&amp;READY)
+             I5250/I5250KEY PORT(&amp;PORT) KEY(ENTER)
+/* Wait until the screen changes, then send row 1 as a message */
+             CHGVAR     VAR(&amp;TRIES) VALUE(0)
+WAIT2:       I5250/I5250SCR PORT(&amp;PORT) SCREEN(&amp;SCREEN) +
+                          ROWS(&amp;ROWS) COLS(&amp;COLS) CSRROW(&amp;CROW) +
+                          CSRCOL(&amp;CCOL) READY(&amp;READY)
+             IF         COND((&amp;READY *NE '1' *OR +
+                          &amp;SCREEN *EQ &amp;BEFORE) *AND &amp;TRIES *LT 30) +
+                          THEN(DO)
+             CHGVAR     VAR(&amp;TRIES) VALUE(&amp;TRIES + 1)
+             DLYJOB     DLY(1)
+             GOTO       CMDLBL(WAIT2)
+             ENDDO
+             CHGVAR     VAR(&amp;LINE) VALUE(%SST(&amp;SCREEN 1 &amp;COLS))
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+                          MSGDTA('1行目:' *CAT %TRIM(&amp;LINE)) +
+                          MSGTYPE(*INFO)
+/* Type SIGNOFF, wait up to 30 seconds for the sign-on screen, end */
+             I5250/I5250TXT PORT(&amp;PORT) TEXT('SIGNOFF') KEY(ENTER)
+             I5250/I5250END PORT(&amp;PORT) OPTION(*CNTRLD) DELAY(30)
+             RETURN
+
+/* Failure: receive the reason, end the session immediately, return */
+ERROR:       RCVMSG     MSGTYPE(*EXCP) MSGDTA(&amp;MSG)
+             IF         COND(&amp;PORT *GT 0) THEN(DO)
+             I5250/I5250END PORT(&amp;PORT) OPTION(*IMMED) DELAY(0)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA(&amp;MSG) +
+                          MSGTYPE(*ESCAPE)
+             ENDPGM</code></pre>
+<p>The handling for when a screen such as "Display Program Messages" comes in right after sign-on (checking with I5250FLD whether the position is an input field and proceeding with ENTER) is in the SMPSGN source.</p>
+
+<p><strong>RPG example</strong> (the essentials of SMPSCR: start a session, wait for the screen to arrive, and write the non-blank rows to the job log)</p>
+<pre><code>     HDFTACTGRP(*NO) ACTGRP(*NEW) BNDDIR('I5250/I5250')
+     HCCSID(*CHAR:*JOBRUN)
+      /COPY I5250/QRPGLESRC,I5250API_H
+     DSMPSCR           PI
+     D Preset                        32A
+     DSleep            PR            10U 0 EXTPROC('sleep')
+     D Seconds                       10U 0 VALUE
+     DPort             S             10I 0 INZ(0)
+     DScreen           S           3564A
+     DRows             S             10I 0
+     DCols             S             10I 0
+     DCsrRow           S             10I 0
+     DCsrCol           S             10I 0
+     DReady            S             10I 0
+     DTries            S             10I 0
+     DIdx              S             10I 0
+     DRowText          S            132A   VARYING
+      * Start the session
+       if I5250_Start(%trim(Preset) : '*DEDICATED' : Port) &lt;&gt; 0;
+         Fail('開始できません: ' +I5250_Error());
+       endif;
+      * Wait until input is ready and the screen arrives (up to 30 seconds)
+       for Tries = 1 to 30;
+         if I5250_GetScreen(Port : Screen : Rows : Cols
+               : CsrRow : CsrCol : Ready) &lt;&gt; 0;
+           Fail('画面を取り出せません: ' +I5250_Error());
+         endif;
+         if Ready = 1 and Screen &lt;&gt; *BLANKS;
+           leave;
+         endif;
+         Sleep(1);
+       endfor;
+      * Row n is the Cols columns of Screen starting at (n-1)*Cols+1
+       for Idx = 1 to Rows;
+         RowText = %trimr(%subst(Screen : (Idx - 1) * Cols + 1
+             : Cols));
+         if RowText &lt;&gt; '';
+           SendMsg(%char(Idx) + ': ' + RowText : '*INFO');
+         endif;
+       endfor;
+      * End (ends without waiting if at the sign-on screen)
+       if I5250_End(Port : '*CNTRLD' : -1) &lt;&gt; 0;
+         Fail('終了できません: ' +I5250_Error());
+       endif;
+       *INLR = *ON;
+       return;</code></pre>
+<p><code>Fail</code> (ends the session immediately and then sends an escape message) is at the end of the SMPSCR source, and <code>SendMsg</code> is in <code>I5250/QRPGLESRC,I5250MSG</code>, which SMPSCR includes.</p>
+
+</div>
+</body>
+</html>

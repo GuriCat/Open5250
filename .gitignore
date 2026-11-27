@@ -1,0 +1,13 @@
+# ソースは絶対非公開 (保険的除外)
+src/
+*.ts
+*.mjs
+*.cjs
+*.js
+*.jsc
+node_modules/
+tmp/
+reference/
+scripts/
+ile/
+config.json

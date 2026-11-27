@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Open 5250 ガイド</title>
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<div class="manual-body">
+
+<h1 class="chapter">Open 5250 ガイド</h1>
+
+<p>Open 5250 は、IBM&nbsp;i の上で動かす 5250 画面のサーバーです。パソコンにはブラウザーだけを用意し、管理画面からセッションを開始して 5250 画面をブラウザーのタブで開きます。RPG や CL からは ILE API (ライブラリー I5250) で操作できます。</p>
+
+<h2 class="section">1&nbsp;配置と開始・終了</h2>
+
+<ul>
+  <li>配置先は <code>/i5250</code> です。配置の手順は、配布物の <code>README_ja.md</code> を参照してください。</li>
+  <li>ILE API と CL コマンドは、配布物の保管ファイル <code>I5250.SAVF</code> からライブラリー I5250 に復元します (IBM&nbsp;i V7R4M0 以降。手順は Open 5250 マニュアル 2.2 節)。</li>
+</ul>
+
+<p><strong>管理画面の開始と終了 (管理者向け)</strong></p>
+<table class="compact">
+  <tr><th style="width:34mm">コマンド</th><th>動き</th></tr>
+  <tr><td><code>I5250/STRI5250</code></td><td>管理画面を開始します (バッチ・ジョブ I5250ADM、省略値はジョブ待ち行列 QSYS/QSYSNOMAX = サブシステム QSYSWRK)。<code>RESTART(*YES)</code> を指定すると、すべての 5250 セッションと管理画面を終了してから、管理画面だけを開始します。</td></tr>
+  <tr><td><code>I5250/ENDI5250</code></td><td>すべての 5250 セッションと管理画面を終了します。<code>OPTION(*CNTRLD)</code> (省略値) はサインオン画面に戻るか切断されるまで <code>DELAY</code> の秒数 (省略値 <code>*NOLIMIT</code> = 無制限) だけ待ち、超えたら <code>*IMMED</code> と同じく SysReq → 90 でサインオフしてから切断します。値と省略値は ENDSBS と同じです。</td></tr>
+</table>
+<ul>
+  <li>実行できるのは、ユーザー・クラスが *SECOFR のユーザーだけです。パラメーターの説明は F1 のヘルプにあります。</li>
+  <li>5250 セッションの対話型ジョブは、管理画面とは別に QINTER で動きます。管理画面のジョブ I5250ADM だけを ENDJOB で止めても、5250 セッションは止まりません。</li>
+  <li>経過は配置先の <code>log/i5250cmd.log</code> に記録されます。シェルからは <code>start-admin.sh</code> / <code>stop-admin.sh</code> でも開始・終了できます。</li>
+</ul>
+
+<h2 class="section">2&nbsp;ブラウザーで使う</h2>
+
+<p><strong>セッションの開始</strong></p>
+<table class="compact">
+  <tr><th style="width:34mm">方法</th><th>操作</th></tr>
+  <tr><td>管理画面</td><td>ブラウザーで <code>http://&lt;IBM i&gt;:5250/</code> を開き、IBM&nbsp;i のユーザー ID とパスワードでログインします。</td></tr>
+  <tr><td>開始</td><td>「新規セッションの開始」の見出しの横で「専用」(初期値) か「共用」を選び、「開始」を押します。クイック接続 (初期値) かプリセットかは、下のラジオボタンで選びます (コード・ページ・画面・プリセットを選び直すと、そのラジオボタンが選ばれます)。開始している間は、経過秒数を表示します (数秒かかります)。一覧の「開く」で、5250 画面をブラウザーの別のタブに表示します。</td></tr>
+  <tr><td>クイック接続</td><td>プリセットを作らずに開始します。「ホスト・コード・ページ」と「画面」を選びます。ホスト・コード・ページの初期値は、IBM&nbsp;i の一次言語が日本語 (2962・2930) なら 5026 日本語カタカナ (IBM&nbsp;i Access Client Solutions の 930 に当たります)、それ以外なら 037 です。画面の初期値は 24x80 です。接続先は常にその IBM&nbsp;i の区画です。</td></tr>
+  <tr><td>プリセットで開始</td><td>「プリセット」で接続構成を選びます (接続構成の「IBM i ホスト名またはIPアドレス」と「宛先ポート」で、この区画のほか別の IBM&nbsp;i にも接続できます)。プリセット一覧と AUTOTYP スクリプト一覧は畳んで表示しています。見出しを押すと開きます。</td></tr>
+  <tr><td>画面の開き方</td><td>設定の窓 (「活動中のセッション」の見出しの右端の歯車) で、一覧の「開く」で 5250 画面を開く先を、「別のタブ」(初期値) か「別のウィンドウ」(アドレス欄やタブのない小さなウィンドウ) から選びます。選んだ値はそのブラウザーに保存されます。</td></tr>
+  <tr><td>リンクをコピー</td><td>一覧の「開く」の横のコピーのアイコン (リンクをコピー) で、5250 画面のアドレスをクリップボードにコピーします。他の人に渡すと、その人のブラウザーで同じセッションを開けます (専用のセッションは、最初に開いた 1 つのタブだけが使えます)。</td></tr>
+</table>
+<p>管理画面の右上の「ヘルプ」と、5250 画面のツールバーのヘルプ (丸で囲んだ i) で、このガイドを開きます。</p>
+
+<p><strong>ブラウザーでの操作</strong></p>
+<ul>
+  <li>5250 画面のアドレスは <code>http://&lt;IBM i&gt;:&lt;ポート&gt;/</code> です。ポートは管理画面の一覧に表示されます。</li>
+  <li>タブやブラウザーを閉じても、セッションは終わりません (サインオンしたまま残ります)。一覧の「開く」でもう一度開くと、続きから操作できます。再読み込みしても同じです。</li>
+  <li>セッションを終えるときは、5250 画面でサインオフしてから、管理画面の一覧で「待ち」を選んで「切断」を押します。「待ち」はサインオン画面に戻るまで待ち、指定の秒数を超えたら「即時」に移ります。「即時」は SysReq → 90 でサインオフしてから切断します。サインオフが 15 秒以内に終わらないとき (保管・復元のような長い処理の途中など) は、そのまま接続を切ってセッションを終了します。このとき IBM&nbsp;i のジョブは、処理の区切りまで動き続けることがあります (IBM&nbsp;i Access Client Solutions で 5250 画面のウィンドウを閉じたときと同じです)。必要なら WRKACTJOB 等で確かめてください。</li>
+  <li>5250 画面のツールバーの人のアイコンは、そのセッションが専用 (1 人) か共用 (2 人) かを表示します。押しても切り替わりません。共用か専用かは、セッションを開始するときに決まります。</li>
+  <li>IBM 5250 MCP にあるウィンドウモード切替とマイク (音声入力) のボタンは、Open 5250 では表示しません。</li>
+  <li><strong>表示設定</strong> — ツールバーの切り替え (入力フィールド強調・桁区切り・シフト文字表示・点滅・十字線ルーラー・カーソル・ツールバー非表示・表示言語) は、使っているブラウザー (Cookie) に保存します。ポート番号に関わらず、同じブラウザーなら同じ設定で始まり、別のパソコンでは初期値です。フォントは、プリセットで開始したセッションならそのプリセットに保存します (クイック接続は毎回初期値)。</li>
+  <li><strong>プリセットの保存先</strong> — 1 プリセット 1 ファイルで、配置先の <code>presets/&lt;プリセット名&gt;.i5250</code> (例 <code>/i5250/presets/LOCAL.i5250</code>) です。1 行に「キー=値」の形です。管理画面の「プリセット一覧」で作成・編集・削除できます。</li>
+  <li>5250 画面そのものの操作 (キー・ツールバー・AUTOTYP 等) は、同梱の IBM 5250 MCP ユーザー・ガイド (<code>IBM5250-MCP-User-Guide.pdf</code>) を参照してください。IBM 5250 MCP と異なる動作・制約は Open 5250 マニュアル 4.7 節にまとめています。</li>
+  <li><strong>外字 (ユーザー定義文字)</strong> — IBM&nbsp;i は外字の値だけを送り、字形は送りません。管理画面の「設定」の窓 (歯車) の「IBM i 外字管理」で字形を取得すると、5250 画面の外字をその字形で描きます。
+    <ul>
+      <li>「取得」を押すと、ユーザー ID とパスワードを聞く窓が開きます。この区画の FTP サーバーにつなぎ、CPYIGCTBL で QIGC3232 (32×32) と QIGC2424 (24×24) の利用者定義の外字を書き出して取得します (書き出し先は FTP のジョブの QTEMP で、IBM&nbsp;i にオブジェクトを残しません。パスワードは保存しません)。FTP サーバーが動いている必要があります (STRTCPSVR *FTP)。</li>
+      <li>必要な権限: フォント表 (QIGC3232・QIGC2424) への *USE (IBM&nbsp;i セキュリティー「2 バイト文字セット・コマンド」)。*SECOFR クラスのユーザーで動作を確認しています。</li>
+      <li>32×32 の字形を優先し、無い字は 24×24 で描きます。字形の無い外字 (未取得・未定義) は、点線の枠と斜線の字形で描きます。</li>
+      <li>「表示」を押すと、別のタブに外字の一覧 (EBCDIC・PC (Shift-JIS)・Unicode のコードと、24×24・32×32 の字形) を表示します。</li>
+      <li>外字を追加・変更したら、もう一度「取得」を押してください。コピーした外字は Unicode の私用領域の文字 (X'6941' = U+E000 から順) になります。</li>
+    </ul></li>
+  <li><strong>URL ホットスポット</strong> — 画面に表示された URL (http / https / www / mailto / ftp / file / gopher) には下線が付き、マウスのポインターが指の形になります。クリックすると新しいウィンドウで開きます (IBM&nbsp;i Access Client Solutions の既定「URL に下線を付ける」と同じです)。入力フィールドの中の URL は対象外です。
+    <ul>
+      <li><code>file://</code> の URL (例 <code>FILE://GURI/IMG/658.JPG</code>) は、ブラウザーが直接開けないため、Open 5250 がその IBM&nbsp;i の IFS からファイルを読んで返します。返すのは、そのセッションの今の画面に表示されている URL のファイルだけです。ファイルは、Open 5250 (管理画面のジョブ) を動かしているユーザーの権限で読みます (NetServer の共有の権限確認は通りません)。事前に該当のフォルダーを Explorer で開くなどして、利用者がアクセスできることを確認してください。</li>
+      <li><strong>PC コマンド (STRPCCMD)</strong> — IBM&nbsp;i のプログラムが STRPCCMD でパソコンにファイルを開かせる命令 (<code>START \\GURI\TMP\…\x.PDF</code> のような <code>START</code> + 共有フォルダーのファイル・<code>file://</code>・<code>http://</code>) は、5250 画面のブラウザーの新しいウィンドウで開きます。PDF・テキスト・画像などブラウザーで表示できるものに限ります。ブラウザーが新しいウィンドウを止めたときは開きません。ブラウザーの設定で、このサイトのポップアップを許可してください。
+        <ul>
+          <li>IBM&nbsp;i 上でもパソコン上でも、コマンドは実行しません。Excel の起動のように、プログラムを動かすコマンドは使えません。</li>
+          <li>開けるのは、そのセッションに IBM&nbsp;i が STRPCCMD で送った <code>START ["題名"] [/オプション] 対象</code> の「対象」だけです。題名とオプションを除いた残り全部を 1 つの対象とみなし、先頭が <code>http://</code>・<code>https://</code>・<code>www.</code> なら URL、<code>\\ホスト\</code>・<code>//ホスト/</code>・<code>file://</code> なら共有フォルダーのファイルとして扱います。それ以外は開きません (例と詳細は Open 5250 マニュアル 4.5.1 節)。ファイルの場所には下の「制約」が同じく当てはまります (NetServer の共有の定義にある共有名であること、その区画のファイルであること)。</li>
+          <li>テキストは UTF-8 として読めなければ Shift_JIS として表示します。</li>
+          <li>ファイル名に日本語 (DBCS) を含んでもかまいません。英小文字のファイル名が半角カタカナで渡る (5250 画面でも半角カタカナで見える) ときは、ツールバーの文字切替 (A / ｱ、Ctrl+F3) で英小文字に切り替えてから開いてください。PC コマンドの文字列は、そのときの文字切替に合わせて読みます。</li>
+        </ul></li>
+      <li><strong>制約</strong>: <code>file://ホスト/共有名/パス</code> の共有名は、NetServer のファイル共有の定義 (QSYS2.SERVER_SHARE_INFO) で IFS のパスに直します (例: 共有 <code>LMS</code> が <code>/tmp/PCDOC</code> を指していれば、<code>FILE://GURI/LMS/x.PPT</code> は <code>/tmp/PCDOC/x.PPT</code>)。定義に無い共有名は開けません。また、ホスト名がその IBM&nbsp;i の区画 (システム名・ホスト名・IP アドレス) の場合だけで、他のサーバーのファイルは開けません (Open 5250 は CIFS のクライアントとして他のサーバーを読みません)。名前で一致しないホスト名は IBM&nbsp;i の名前の解決 (ホスト・テーブル・DNS) で IP アドレスに直し、この区画の IP アドレスなら開きます (名前の解決は時間がかかることがあるため、画面に file:// が出た時点で先に始め、結果を 10 分覚えます)。</li>
+    </ul></li>
+</ul>
+
+<p><strong>複数のセッション</strong></p>
+<ul>
+  <li>セッションは 1 件ごとに別のポート (5251 から順) を使い、IBM&nbsp;i では別の対話型ジョブとして動きます。別のプロセスのセッション同士は互いに影響しません (同じプロセスのセッションについては次の項目)。</li>
+  <li>同時に動かせる数は、管理画面の「セッション数の上限」(既定 10 = ポート 5251〜5260) で決まります。</li>
+  <li>サーバー・プロセス (node) 1 つで受け持つセッションの数は、管理画面の「プロセスあたりのセッション数」(1 / 10 / 無制限、既定 10) で決まります。新しいセッションは、受け持つ数の最も少ないプロセスに入り、入れられるプロセスが無いときだけ新しいプロセスを起動します。プロセスを共用すると開始が速くメモリーも少なくて済みますが、そのプロセスが異常終了・強制終了すると、同じプロセスのセッションがすべて終わります。1 本のセッションの終了や IBM&nbsp;i との切断では、そのセッションだけが終わります。</li>
+  <li>一覧の「装置名」は、IBM&nbsp;i がそのセッションに割り当てた表示装置 (例 QPADEV0003) です。対話型ジョブの名前にもなります。</li>
+  <li>管理画面の「非活動タイムアウト」(5〜300 分、空欄 = なし) を設定すると、サインオンしているセッションで、その分数のあいだ IBM&nbsp;i とのやり取り (実行キー等の送信・画面の更新) が無ければ、「即時」と同じ手順で終了します。サインオン画面のままのセッションは対象外です。コマンドやプログラムの実行中 (キーボードがロックされている間。保管のように画面を出さずに長く動く処理も含みます) は非活動とみなさず、実行が終わって入力できるようになった時点から数え直します。時間が来たかどうかは 15 秒ごとに確かめるので、終了は指定の時間から最大 15 秒ほど遅れます。
+    <ul>
+      <li>開いている 5250 画面には、まずサインオン画面が出て、すぐ (1〜2 秒後) に画面が空白になり、下の行に <code>COMM659</code> (通信の切断) が出ます。セッションは終了しているので、その画面ではもう操作できません。続けて使うときは、管理画面で新しいセッションを開始してください。</li>
+      <li>管理画面の一覧からは、5 秒ほどで消えます。</li>
+      <li>IBM&nbsp;i のシステム値 QINACTITV と同じ範囲の値ですが、処置は異なります。QINACTITV はジョブを終了 (QINACTMSGQ が *ENDJOB のとき) または切り離し (*DSCJOB のとき) します。Open 5250 はサインオフしてから接続を切り、セッションそのものを終了します。両方を設定したときは、先に時間が来た方が働きます。</li>
+    </ul></li>
+</ul>
+
+<p><strong>共用と専用</strong></p>
+<table class="compact">
+  <tr><th style="width:34mm">モード</th><th>動き</th></tr>
+  <tr><td><strong>共用</strong></td><td>同じセッションを複数の人が同時に表示・操作するための特別な使い方です (通常の 5250 セッションは専用を使います)。同じセッションを複数のブラウザーやタブで開くと、全員が表示も入力もできます。一人の入力は、他の人の画面にも表示されます (表示までの遅れは、パソコンと IBM&nbsp;i の間の通信の往復時間に、サーバーが入力をまとめる 0.05 秒と、画面の処理の時間を足したものです。往復が約 0.025 秒の VPN 経由の接続で測った例では約 0.15 秒でした。回線の状況によって変わります。速く打つと、何文字かまとめて表示されます)。誰かが実行キーなどを押すと、全員の画面が次の画面に移ります。同じフィールドに同時に入力したときは、後から処理された人の値だけが残ります (2 人の文字が混ざることはありません)。</td></tr>
+  <tr><td><strong>専用</strong></td><td>最初に 5250 画面を開いたタブだけが表示と入力をできます。他のタブ (同じブラウザーの別のタブ・同じパソコンの別のブラウザーのタブ・他のクライアント (別のパソコン) のブラウザーのタブ・「タブを複製」したタブのどれも。持ち主はブラウザーや人ではなくタブ単位です) で開くと、「このセッションは専用で、他の利用者が使用中です。」と表示し、そのタブを閉じます。使っているタブを閉じてから「専用の解放までの時間」(管理画面の設定、既定 5 分。0 = 約 5 秒) がたつと、他のタブで開けるようになります。使っているタブで再読み込みしても、そのタブが使い続けられます。使っているパソコンが落ちたり回線が切れたままになったりしたときは、応答が無くなってから 1 分の後に、さらに「専用の解放までの時間」を待ちます。</td></tr>
+</table>
+
+<div class="box caution">
+  <div class="box-title">ご注意</div>
+  <ul>
+    <li>5250 画面のポートには認証がありません。ポート番号を知っている人は、共用のセッションを表示・操作できます。</li>
+    <li>専用のセッションでも、サインオンしたままタブを閉じると、「専用の解放までの時間」(既定 5 分) の後に次に開いた人がそのサインオン済みの画面を使えるようになります。席を離れるときや使い終わったときは、サインオフしてください。</li>
+    <li>専用で使っているタブが 1 分ほどサーバーに応答しないと (パソコンの停止・回線の切断、ブラウザーが裏のタブを眠らせたときなど)、そのタブは使用中でなくなり、他のタブで開けるようになります。そのタブに戻ったとき、他のタブが使っていなければ、そのまま使い続けられます。</li>
+    <li>専用で他のタブを自動で閉じられるのは、管理画面の「開く」で開いたタブと、それを「タブを複製」したタブだけです。アドレス欄に URL を入れて開いたタブ (とその複製) などは、ブラウザーの制限で閉じられず、空白の画面のまま残ります (入力はできません)。手で閉じてください。</li>
+    <li>管理画面から開始したセッションは、IBM&nbsp;i との接続が切れても自動では再接続しません。ホストが接続を閉じるとセッションを終了します。</li>
+  </ul>
+</div>
+
+<h2 class="section">3&nbsp;RPG・CL から使う (ILE API)</h2>
+
+<p>CL プログラムからはコマンド (I5250xxx)、ILE RPG からはサービスプログラム I5250/I5250API の手続きで、5250 セッションを開始し、キーや文字を送り、画面を読み取れます。セッションはポート番号で指定します。</p>
+
+<div class="box caution">
+  <div class="box-title">先に読んでください</div>
+  <ul>
+    <li>管理画面が動いている必要があります (セッションの開始・終了は管理画面が受けます)。受け付けるのは同じ区画 (127.0.0.1) からの要求だけで、認証はありません。</li>
+    <li><strong>キーを送った直後の画面は、まだ前の画面のことがあります。</strong>次の画面を読むときは、キーを送る前の画面を取っておき、画面が変わるまで 1 秒おきに取り直します (下のサンプルの WAIT2)。「入力可」だけを条件にすると、前の画面を読んでしまいます。</li>
+    <li>サインオンの直後に「プログラム・メッセージの表示」などの画面が 1 枚はさまることがあります。カーソル位置が入力フィールドかを <code>I5250FLD</code> で確かめ、入力フィールドでなければ ENTER で進めます。</li>
+    <li>行 (ROW) と桁 (COL) は 1 から数えます。0 は「現在のカーソル位置」です。データの位置 (属性バイトの次の桁) で指定します。</li>
+    <li>文字はジョブの CCSID で受け渡します (変換は API が行います)。ジョブの CCSID が 65535 のときは既定の CCSID (DFTCCSID) を使います。</li>
+    <li>同じセッションを複数のプログラムで使えますが、API に排他はありません。専用 (*DEDICATED) が断るのはブラウザーの他のタブだけで、API からの操作は断りません。同時に使い得るときは、呼ぶ側で順番を守ってください (例: 自分のライブラリーのデータ域を <code>ALCOBJ</code> で押さえてから使う)。</li>
+    <li>コマンド行から <code>CALL ... PARM('...')</code> で渡す文字のリテラルは、32 バイトまでしか確実に渡りません (IBM&nbsp;i の仕様)。長い値は CL プログラムの変数から渡します。</li>
+  </ul>
+</div>
+
+<h3>3.1&nbsp;CL コマンド</h3>
+<p>失敗すると CPF9897 のエスケープ・メッセージを送ります (<code>MONMSG MSGID(CPF9897)</code> で受け、<code>RCVMSG MSGTYPE(*EXCP) MSGDTA(&amp;MSG)</code> で理由を取り出します)。各パラメーターの説明は、プロンプト (F4) で F1 を押すとヘルプで確かめられます。</p>
+<table class="compact">
+  <tr><th style="width:62mm">文法</th><th>内容</th></tr>
+  <tr><td><code>I5250STR PRESET(プリセット名) MODE(*DEDICATED|*SHARED) PORT(&amp;PORT)</code></td><td>セッションを開始し、ポート番号を &amp;PORT (<code>*DEC 5 0</code>) に返します。MODE の省略値は *DEDICATED (専用) です。<strong>CL プログラムの中でだけ</strong>使えます (値を返すため)。</td></tr>
+  <tr><td><code>I5250END PORT(n) OPTION(*CNTRLD|*IMMED) DELAY(*DFT|秒)</code></td><td>セッションを終了します。*CNTRLD (省略値) はサインオン画面に戻るまで DELAY 秒 (0〜99999、*DFT = 管理画面の既定 300 秒) 待ち、戻らなければ SysReq → 90 でサインオフします。*IMMED はすぐに SysReq → 90 でサインオフします。サインオン画面ならどちらもすぐ終わります。</td></tr>
+  <tr><td><code>I5250KEY PORT(n) KEY(キー) ROW(行) COL(桁)</code></td><td>キーを送ります。ROW・COL (省略値 0 = 現在の位置) を指定すると、カーソルをそこへ動かしてから送ります。キーの名前は下の表のとおりです。</td></tr>
+  <tr><td><code>I5250TXT PORT(n) TEXT(文字) ROW(行) COL(桁) KEY(ENTER|*NONE|キー)</code></td><td>文字を入力してからキーを送ります (KEY の省略値は ENTER、*NONE なら入力だけ)。TEXT は 1024 バイトまでで、式が書けます。CL の変数をそのまま渡すと後ろの空白まで入力されるので、<code>TEXT(%TRIMR(&amp;USER))</code> のように書きます。</td></tr>
+  <tr><td><code>I5250PST PORT(n) TEXT(文字) ROW(行) COL(桁)</code></td><td>指定位置を左上として、複数行を矩形に貼り付けます (改行 = X'25'、3000 バイトまで、キーは送りません)。TEXT には式が書けます。</td></tr>
+  <tr><td><code>I5250SCR PORT(n) SCREEN(&amp;SCR) ROWS(&amp;R) COLS(&amp;C) CSRROW(&amp;CR) CSRCOL(&amp;CC) READY(&amp;RDY)</code></td><td>画面を取り出します。SCREEN (<code>*CHAR 3564</code>) は行を順につないだ文字で、n 行目は <code>(n-1)*COLS+1</code> から COLS 桁です。ROWS・COLS・CSRROW・CSRCOL は <code>*DEC 3 0</code>、READY (<code>*CHAR 1</code>) は入力可なら '1' です。<strong>CL プログラムの中でだけ</strong>使えます。</td></tr>
+  <tr><td><code>I5250FLD PORT(n) ROW(行) COL(桁) LEN(桁数) TEXT(&amp;T)</code></td><td>指定位置の文字を取り出します (TEXT は <code>*CHAR 3564</code>)。LEN(0) (省略値) はその位置からフィールドの終わりまでで、入力フィールドでない位置なら CPF9897 になります。<strong>CL プログラムの中でだけ</strong>使えます。</td></tr>
+  <tr><td><code>I5250ATP PORT(n) SRCFILE(ライブラリー/ファイル) SRCMBR(メンバー)</code><br>または <code>I5250ATP PORT(n) STMF('パス')</code></td><td>AUTOTYP スクリプトを、ソース・メンバー (SRCFILE の省略値 *LIBL/QAUTOTYP) かストリーム・ファイルから読んで実行します。読み込みのとき <code>/tmp/I5250ATP-&lt;ジョブ番号&gt;.TXT</code> に一時ファイルを作り、終わったら消します。</td></tr>
+</table>
+
+<p><strong>キーの名前</strong> (KEY・Key に指定します。英大文字)</p>
+<table class="compact">
+  <tr><th style="width:34mm">種類</th><th>名前</th></tr>
+  <tr><td>実行キー</td><td><code>ENTER</code> <code>F1</code>〜<code>F24</code> <code>PAGEUP</code> <code>PAGEDOWN</code> (<code>ROLLUP</code> <code>ROLLDN</code>) <code>HELP</code> <code>CLEAR</code> <code>PRINT</code> <code>PA1</code>〜<code>PA3</code> <code>SYSRQ</code> <code>ATTN</code></td></tr>
+  <tr><td>カーソル移動</td><td><code>TAB</code> <code>BTAB</code> <code>UP</code> <code>DOWN</code> <code>LEFT</code> <code>RIGHT</code> <code>HOME</code> <code>NEWLINE</code></td></tr>
+  <tr><td>編集</td><td><code>RESET</code> <code>ERASE_EOF</code> <code>ERASE_INPUT</code> <code>FIELD_EXIT</code> <code>FIELD_EXIT_PLUS</code> <code>FIELD_EXIT_MINUS</code> <code>DEL</code> <code>INSERT</code> <code>DUP</code> <code>FIELD_MARK</code> <code>SPACE</code></td></tr>
+</table>
+
+<h3>3.2&nbsp;RPG の手続き (サービスプログラム I5250/I5250API)</h3>
+<p>宣言は <code>/COPY I5250/QRPGLESRC,I5250API_H</code>、結合は <code>H BNDDIR('I5250/I5250')</code> で行います。戻り値はすべて戻りコード (<code>10I 0</code>、0 = 正常) で、0 以外のときは <code>I5250_Error()</code> で理由を取り出します。</p>
+<table class="compact">
+  <tr><th style="width:62mm">手続き</th><th>内容</th></tr>
+  <tr><td><code>I5250_Start(Preset : Mode : Port)</code></td><td>セッションを開始します。Preset = プリセット名 (<code>32A VARYING</code>)、Mode = <code>'*SHARED'</code> / <code>'*DEDICATED'</code>、Port (<code>10I 0</code>) に開始したポートが返ります。</td></tr>
+  <tr><td><code>I5250_End(Port : Option : Delay)</code></td><td>終了します。Option = <code>'*CNTRLD'</code> / <code>'*IMMED'</code>、Delay = 待ち時間 (秒、-1 = 管理画面の既定)。</td></tr>
+  <tr><td><code>I5250_SendKey(Port : Key : Row : Col)</code></td><td>キーを送ります。Row・Col = 0 は現在の位置。</td></tr>
+  <tr><td><code>I5250_SendText(Port : Text : Row : Col : Key)</code></td><td>文字 (<code>32000A VARYING</code>) を入力してからキーを送ります。Key = <code>'*NONE'</code> なら入力だけ。</td></tr>
+  <tr><td><code>I5250_PasteText(Port : Text : Row : Col)</code></td><td>複数行を矩形に貼り付けます (改行 = X'25'、キーは送りません)。</td></tr>
+  <tr><td><code>I5250_GetScreen(Port : Screen : Rows : Cols : CsrRow : CsrCol : Ready)</code></td><td>画面を取り出します。Screen は <code>3564A</code> で、n 行目は <code>(n-1)*Cols+1</code> から Cols 桁です。Ready = 1 なら入力可。</td></tr>
+  <tr><td><code>I5250_GetFieldText(Port : Row : Col : Length : Text)</code></td><td>指定位置から Length 桁の文字を Text (<code>3564A VARYING</code>) に返します。Length = 0 はフィールドの終わりまで。</td></tr>
+  <tr><td><code>I5250_RunAutotyp(Port : Script)</code></td><td>AUTOTYP スクリプトの本文 (<code>65000A VARYING</code>、改行 = X'25') を実行します。</td></tr>
+  <tr><td><code>I5250_RunAutotypStmf(Port : Path : Trim)</code></td><td>ストリーム・ファイル (CCSID 1208) のスクリプトを実行します。Trim = <code>'1'</code> で行末の空白を落とします。</td></tr>
+  <tr><td><code>I5250_Error()</code></td><td>直前の呼び出しのエラー・メッセージ (<code>512A VARYING</code>) を返します。</td></tr>
+</table>
+<p>ソースは固定形式で書きます (H・D・P 仕様書は固定形式、演算は自由形式)。固定形式の D 仕様書では <code>EXTPROC(*DCLCASE)</code> は使えないため、宣言 (I5250API_H) では手続き名を <code>EXTPROC('I5250_Start')</code> のように文字で指定しています。</p>
+
+<h3>3.3&nbsp;サンプル</h3>
+<p>次の 2 つのサンプルが、ライブラリー I5250 にプログラムとソース (QCLSRC・QRPGLESRC) で入っています。</p>
+<table class="compact">
+  <tr><th style="width:34mm">プログラム</th><th>内容</th></tr>
+  <tr><td><code>SMPSGN</code> (ILE CL)</td><td>コマンドを使い、サインオンして最初の画面を読み、SIGNOFF してセッションを終了します。<code>CALL I5250/SMPSGN PARM('LOCAL' 'ユーザー' 'パスワード')</code></td></tr>
+  <tr><td><code>SMPSCR</code> (ILE RPG)</td><td>手続きを使い、セッションを開始して画面をジョブ・ログに書き出し、カーソル位置の入力フィールドの文字を取り出してから終了します。<code>CALL I5250/SMPSCR PARM('LOCAL')</code></td></tr>
+</table>
+
+<p><strong>CL の例</strong> (SMPSGN の要点。セッションを開始し、サインオン画面を待ってサインオンし、次の画面を読む)</p>
+<pre><code>             PGM        PARM(&amp;PRESET &amp;USER &amp;PWD)
+             DCL        VAR(&amp;PRESET) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&amp;USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&amp;PWD) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&amp;PORT) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&amp;SCREEN) TYPE(*CHAR) LEN(3564)
+             DCL        VAR(&amp;BEFORE) TYPE(*CHAR) LEN(3564)
+             DCL        VAR(&amp;ROWS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;COLS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;CROW) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;CCOL) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;PROW) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&amp;READY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&amp;TRIES) TYPE(*INT) LEN(4)
+             DCL        VAR(&amp;LINE) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&amp;MSG) TYPE(*CHAR) LEN(512)
+             MONMSG     MSGID(CPF9897) EXEC(GOTO CMDLBL(ERROR))
+
+/* セッションを開始 (ポートが &amp;PORT に返る)       */
+             I5250/I5250STR PRESET(&amp;PRESET) MODE(*DEDICATED) +
+                          PORT(&amp;PORT)
+/* サインオン画面が届くまで待つ (1 秒おき、最大 30 秒) */
+             CHGVAR     VAR(&amp;TRIES) VALUE(0)
+WAIT1:       I5250/I5250SCR PORT(&amp;PORT) SCREEN(&amp;SCREEN) +
+                          ROWS(&amp;ROWS) COLS(&amp;COLS) CSRROW(&amp;CROW) +
+                          CSRCOL(&amp;CCOL) READY(&amp;READY)
+             IF         COND((&amp;READY *NE '1' *OR +
+                          &amp;SCREEN *EQ ' ') *AND &amp;TRIES *LT 30) +
+                          THEN(DO)
+             CHGVAR     VAR(&amp;TRIES) VALUE(&amp;TRIES + 1)
+             DLYJOB     DLY(1)
+             GOTO       CMDLBL(WAIT1)
+             ENDDO
+/* ユーザー (カーソル位置) とパスワード (1 行下) を入力し、 */
+/* ENTER の直前の画面を &amp;BEFORE に取っておいてから ENTER  */
+             I5250/I5250TXT PORT(&amp;PORT) TEXT(%TRIMR(&amp;USER)) +
+                          ROW(&amp;CROW) COL(&amp;CCOL) KEY(*NONE)
+             CHGVAR     VAR(&amp;PROW) VALUE(&amp;CROW + 1)
+             I5250/I5250TXT PORT(&amp;PORT) TEXT(%TRIMR(&amp;PWD)) +
+                          ROW(&amp;PROW) COL(&amp;CCOL) KEY(*NONE)
+             I5250/I5250SCR PORT(&amp;PORT) SCREEN(&amp;BEFORE) +
+                          ROWS(&amp;ROWS) COLS(&amp;COLS) CSRROW(&amp;CROW) +
+                          CSRCOL(&amp;CCOL) READY(&amp;READY)
+             I5250/I5250KEY PORT(&amp;PORT) KEY(ENTER)
+/* 画面が変わるまで待ち、1 行目をメッセージで出す   */
+             CHGVAR     VAR(&amp;TRIES) VALUE(0)
+WAIT2:       I5250/I5250SCR PORT(&amp;PORT) SCREEN(&amp;SCREEN) +
+                          ROWS(&amp;ROWS) COLS(&amp;COLS) CSRROW(&amp;CROW) +
+                          CSRCOL(&amp;CCOL) READY(&amp;READY)
+             IF         COND((&amp;READY *NE '1' *OR +
+                          &amp;SCREEN *EQ &amp;BEFORE) *AND &amp;TRIES *LT 30) +
+                          THEN(DO)
+             CHGVAR     VAR(&amp;TRIES) VALUE(&amp;TRIES + 1)
+             DLYJOB     DLY(1)
+             GOTO       CMDLBL(WAIT2)
+             ENDDO
+             CHGVAR     VAR(&amp;LINE) VALUE(%SST(&amp;SCREEN 1 &amp;COLS))
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+                          MSGDTA('1行目:' *CAT %TRIM(&amp;LINE)) +
+                          MSGTYPE(*INFO)
+/* SIGNOFF を打ち、サインオン画面に戻るまで最大 30 秒待って終了 */
+             I5250/I5250TXT PORT(&amp;PORT) TEXT('SIGNOFF') KEY(ENTER)
+             I5250/I5250END PORT(&amp;PORT) OPTION(*CNTRLD) DELAY(30)
+             RETURN
+
+/* 失敗: 理由を受け取り、セッションを即時終了してから返す */
+ERROR:       RCVMSG     MSGTYPE(*EXCP) MSGDTA(&amp;MSG)
+             IF         COND(&amp;PORT *GT 0) THEN(DO)
+             I5250/I5250END PORT(&amp;PORT) OPTION(*IMMED) DELAY(0)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA(&amp;MSG) +
+                          MSGTYPE(*ESCAPE)
+             ENDPGM</code></pre>
+<p>サインオン直後に「プログラム・メッセージの表示」などがはさまる場合の処理 (I5250FLD で入力フィールドかを確かめて ENTER で進める) は、SMPSGN のソースにあります。</p>
+
+<p><strong>RPG の例</strong> (SMPSCR の要点。セッションを開始し、画面が届くまで待って、空白でない行をジョブ・ログに書く)</p>
+<pre><code>     HDFTACTGRP(*NO) ACTGRP(*NEW) BNDDIR('I5250/I5250')
+     HCCSID(*CHAR:*JOBRUN)
+      /COPY I5250/QRPGLESRC,I5250API_H
+     DSMPSCR           PI
+     D Preset                        32A
+     DSleep            PR            10U 0 EXTPROC('sleep')
+     D Seconds                       10U 0 VALUE
+     DPort             S             10I 0 INZ(0)
+     DScreen           S           3564A
+     DRows             S             10I 0
+     DCols             S             10I 0
+     DCsrRow           S             10I 0
+     DCsrCol           S             10I 0
+     DReady            S             10I 0
+     DTries            S             10I 0
+     DIdx              S             10I 0
+     DRowText          S            132A   VARYING
+      * セッションを開始
+       if I5250_Start(%trim(Preset) : '*DEDICATED' : Port) &lt;&gt; 0;
+         Fail('開始できません: ' + I5250_Error());
+       endif;
+      * 入力可能になり画面が届くまで待つ (最大 30 秒)
+       for Tries = 1 to 30;
+         if I5250_GetScreen(Port : Screen : Rows : Cols
+               : CsrRow : CsrCol : Ready) &lt;&gt; 0;
+           Fail('画面を取り出せません: ' + I5250_Error());
+         endif;
+         if Ready = 1 and Screen &lt;&gt; *BLANKS;
+           leave;
+         endif;
+         Sleep(1);
+       endfor;
+      * n 行目は Screen の (n-1)*Cols+1 から Cols 桁
+       for Idx = 1 to Rows;
+         RowText = %trimr(%subst(Screen : (Idx - 1) * Cols + 1
+             : Cols));
+         if RowText &lt;&gt; '';
+           SendMsg(%char(Idx) + ': ' + RowText : '*INFO');
+         endif;
+       endfor;
+      * 終了 (サインオン画面なら待たずに終わる)
+       if I5250_End(Port : '*CNTRLD' : -1) &lt;&gt; 0;
+         Fail('終了できません: ' + I5250_Error());
+       endif;
+       *INLR = *ON;
+       return;</code></pre>
+<p><code>Fail</code> (セッションを即時終了してからエスケープ・メッセージを送る) は SMPSCR のソースの終わりに、<code>SendMsg</code> は SMPSCR が取り込む <code>I5250/QRPGLESRC,I5250MSG</code> にあります。</p>
+
+</div>
+</body>
+</html>
